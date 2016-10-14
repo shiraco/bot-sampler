@@ -42,8 +42,8 @@ class WebhookResource(object):
             raise falcon.HTTPBadRequest('Empty request body',
                                         'A valid JSON document is required.')
 
-        receive_params = json.loads(body.decode('utf-8'))
-        logger.debug('receive_params: {}'.format(receive_params))
+        body = json.loads(body.decode('utf-8'))
+        logger.debug('receive_params: {}'.format(body))
 
         # handle webhook body
         try:
