@@ -1,0 +1,16 @@
+{
+    "name": "Linebot",
+    "description": "Linebot",
+    "website": "https://github.com/shiraco/bot-sampler",
+    "repository": "https://github.com/shiraco/bot-sampler",
+    "keywords": [
+        "python"
+    ],
+    "success_url": "/",
+    "env": {
+        "LINE_CHANNEL_ACCESS_TOKEN": {
+            "description": "LINE Channel Access Token",
+            "required": true
+        }
+    }
+}
