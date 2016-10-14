@@ -25,10 +25,23 @@ logger.addHandler(handler)
 
 LINE_CHANNEL_SECRET = os.environ.get('LINE_CHANNEL_SECRET', '')
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN', '')
+LINE_DEFAULT_TO_USER = os.environ.get('LINE_DEFAULT_TO_USER', '')
 
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 # parser = WebhookParser(LINE_CHANNEL_SECRET)
+
+
+class PushResource(object):
+
+    def on_get(self, req, resp):
+
+        to = req.get_param('to', default=LINE_DEFAULT_TO_USER)
+        text = req.get_param('text', default='Hello World!')
+
+        line_bot_api.push_message(to, TextSendMessage(text=text))
+
+        resp.body = json.dumps('OK')
 
 
 class WebhookResource(object):
@@ -70,3 +83,4 @@ def handle_message(event):
 
 api = falcon.API()
 api.add_route('/webhook', WebhookResource())
+api.add_route('/push', PushResource())
