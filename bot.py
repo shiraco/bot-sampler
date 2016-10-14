@@ -1,10 +1,20 @@
+# coding: utf-8
+
 import json
 import os
 from logging import DEBUG, StreamHandler, getLogger
 
-import requests
-
 import falcon
+
+from linebot import (
+    LineBotApi, WebhookHandler
+)
+from linebot.exceptions import (
+    InvalidSignatureError
+)
+from linebot.models import (
+    MessageEvent, TextMessage, TextSendMessage,
+)
 
 # logger
 logger = getLogger(__name__)
@@ -13,19 +23,21 @@ handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
-REPLY_ENDPOINT = 'https://api.line.me/v2/bot/message/reply'
+LINE_CHANNEL_SECRET = os.environ.get('LINE_CHANNEL_SECRET', '')
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN', '')
+
+line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
+handler = WebhookHandler(LINE_CHANNEL_SECRET)
+# parser = WebhookParser(LINE_CHANNEL_SECRET)
 
 
 class WebhookResource(object):
-    header = {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer {}'.format(LINE_CHANNEL_ACCESS_TOKEN)
-    }
 
     def on_post(self, req, resp):
 
+        signature = req.headers['X-Line-Signature']
         body = req.stream.read()
+
         if not body:
             raise falcon.HTTPBadRequest('Empty request body',
                                         'A valid JSON document is required.')
@@ -33,31 +45,29 @@ class WebhookResource(object):
         receive_params = json.loads(body.decode('utf-8'))
         logger.debug('receive_params: {}'.format(receive_params))
 
-        for event in receive_params['events']:
+        # handle webhook body
+        try:
+            handler.handle(body, signature)
 
-            logger.debug('event: {}'.format(event))
+        except InvalidSignatureError:
+            raise falcon.HTTPBadRequest('Invalid signature error.')
 
-            if event['type'] == 'message':
-                user_utt = event['message']['text']
-                sys_utt = user_utt
+        resp.body = json.dumps('OK')
 
-                send_content = {
-                    'replyToken': event['replyToken'],
-                    'messages': [
-                        {
-                            'type': 'text',
-                            'text': sys_utt
-                        }
 
-                    ]
-                }
-                send_content = json.dumps(send_content)
-                logger.debug('send_content: {}'.format(send_content))
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
 
-                res = requests.post(REPLY_ENDPOINT, data=send_content, headers=self.header)
-                logger.debug('res: {} {}'.format(res.status_code, res.reason))
+    logger.debug('event: {}'.format(event))
 
-                resp.body = json.dumps('OK')
+    user_utt = event.message.text
+    sys_utt = user_utt
+
+    res = line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=sys_utt))
+
+    logger.debug('res: {} {}'.format(res.status_code, res.reason))
 
 
 api = falcon.API()
