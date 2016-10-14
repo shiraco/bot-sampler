@@ -63,11 +63,9 @@ def handle_message(event):
     user_utt = event.message.text
     sys_utt = user_utt
 
-    res = line_bot_api.reply_message(
+    line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=sys_utt))
-
-    logger.debug('res: {} {}'.format(res.status_code, res.reason))
 
 
 api = falcon.API()
