@@ -35,7 +35,7 @@ class WebhookResource(object):
 
     def on_post(self, req, resp):
 
-        signature = req.headers['X-Line-Signature']
+        signature = req.get_header('X-Line-Signature')
         body = req.stream.read()
 
         if not body:
