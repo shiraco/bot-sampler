@@ -39,6 +39,7 @@ class PushResource(object):
         to = req.get_param('to', default=LINE_DEFAULT_TO_USER)
         text = req.get_param('text', default='Hello World!')
 
+        logger.debug('to user: {}'.format(to))
         line_bot_api.push_message(to, TextSendMessage(text=text))
 
         resp.body = json.dumps('OK')
