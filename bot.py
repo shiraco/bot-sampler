@@ -10,7 +10,7 @@ from linebot import (
     LineBotApi, WebhookHandler
 )
 from linebot.exceptions import (
-    InvalidSignatureError
+    InvalidSignatureError, LineBotApiError
 )
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage,
@@ -40,7 +40,12 @@ class PushResource(object):
         text = req.get_param('text', default='Hello World!')
 
         logger.debug('to user: {}'.format(to))
-        line_bot_api.push_message(to, TextSendMessage(text=text))
+
+        try:
+            line_bot_api.push_message(to, TextSendMessage(text=text))
+
+        except LineBotApiError:
+            raise falcon.HTTP_INTERNAL_SERVER_ERROR('LINE bot api error')
 
         resp.body = json.dumps('OK')
 
