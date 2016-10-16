@@ -5,6 +5,7 @@ import os
 from logging import DEBUG, StreamHandler, getLogger
 
 import falcon
+from wsgiref import simple_server
 
 from linebot import (
     LineBotApi, WebhookHandler
@@ -87,6 +88,11 @@ def handle_message(event):
         TextSendMessage(text=sys_utt))
 
 
-api = falcon.API()
-api.add_route('/webhook', WebhookResource())
-api.add_route('/push', PushResource())
+app = falcon.API()
+app.add_route('/webhook', WebhookResource())
+app.add_route('/push', PushResource())
+
+
+if __name__ == '__main__':
+    httpd = simple_server.make_server('127.0.0.1', 8000, app)
+    httpd.serve_forever()
